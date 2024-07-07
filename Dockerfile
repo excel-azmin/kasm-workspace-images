@@ -1,4 +1,4 @@
-ARG BASE_TAG="develop"
+ARG BASE_TAG="1.15.0"
 ARG BASE_IMAGE="core-ubuntu-jammy"
 FROM kasmweb/$BASE_IMAGE:$BASE_TAG
 
@@ -8,7 +8,13 @@ ENV HOME /home/kasm-default-profile
 ENV STARTUPDIR /dockerstartup
 WORKDIR $HOME
 
-### Envrionment config
+# Install SUDO for kasm-user
+RUN apt-get update \
+    && apt-get install -y sudo \
+    && echo 'kasm-user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
+    && rm -rf /var/lib/apt/list/*
+
+### Environment config
 ENV DEBIAN_FRONTEND=noninteractive \
     SKIP_CLEAN=true \
     KASM_RX_HOME=$STARTUPDIR/kasmrx \
@@ -19,21 +25,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
                   /ubuntu/install/chrome/install_chrome.sh \
                   /ubuntu/install/chromium/install_chromium.sh \
                   /ubuntu/install/firefox/install_firefox.sh \
-                  /ubuntu/install/sublime_text/install_sublime_text.sh \
-                  /ubuntu/install/vs_code/install_vs_code.sh \
-                  /ubuntu/install/nextcloud/install_nextcloud.sh \
-                  /ubuntu/install/remmina/install_remmina.sh \
                   /ubuntu/install/only_office/install_only_office.sh \
-                  /ubuntu/install/signal/install_signal.sh \
-                  /ubuntu/install/gimp/install_gimp.sh \
                   /ubuntu/install/zoom/install_zoom.sh \
-                  /ubuntu/install/obs/install_obs.sh \
-                  /ubuntu/install/ansible/install_ansible.sh \
-                  /ubuntu/install/terraform/install_terraform.sh \
                   /ubuntu/install/telegram/install_telegram.sh \
-                  /ubuntu/install/thunderbird/install_thunderbird.sh \
-                  /ubuntu/install/slack/install_slack.sh \
-                  /ubuntu/install/gamepad_utils/install_gamepad_utils.sh \
+                  /ubuntu/install/wine/install_wine.sh \
                   /ubuntu/install/cleanup/cleanup.sh"
 
 # Copy install scripts
