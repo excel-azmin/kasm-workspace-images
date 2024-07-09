@@ -26,18 +26,41 @@ ENV DEBIAN_FRONTEND=noninteractive \
                   /ubuntu/install/chromium/install_chromium.sh \
                   /ubuntu/install/firefox/install_firefox.sh \
                   /ubuntu/install/only_office/install_only_office.sh \
-                  /ubuntu/install/zoom/install_zoom.sh \
-                  /ubuntu/install/telegram/install_telegram.sh \
                   /ubuntu/install/vs_code/install_vs_code.sh \
                   /ubuntu/install/cleanup/cleanup.sh"
-                  
+
 # Copy install scripts
-COPY ./src/ $INST_DIR
+COPY src/ $INST_DIR
+
+# Install Docker, Python, NVM, and Node.js
+RUN apt-get update \
+    && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    software-properties-common \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce docker-ce-cli containerd.io \
+    && groupadd docker \
+    && usermod -aG docker kasm-user \
+    && newgrp docker \
+    && apt-get install -y python3 python3-pip \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
+    && export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")" \
+    && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+    && nvm install 18 \
+    && nvm use 18 \
+    && nvm alias default 18 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Run installations
 RUN \
   for SCRIPT in $INST_SCRIPTS; do \
-    bash ${INST_DIR}/${SCRIPT} || exit 1; \
+    bash ${INST_DIR}${SCRIPT} || exit 1; \
   done && \
   $STARTUPDIR/set_user_permission.sh $HOME && \
   rm -f /etc/X11/xinit/Xclients && \
@@ -46,15 +69,13 @@ RUN \
   chown -R 1000:0 /home/kasm-user && \
   rm -Rf ${INST_DIR}
 
-# Set kasm-user password
-RUN echo 'kasm-user:yourpassword' | chpasswd
-
-# Add kasm-user to sudo group
-RUN usermod -aG sudo kasm-user
-
 # Userspace Runtime
 ENV HOME /home/kasm-user
 WORKDIR $HOME
 USER 1000
+
+# Ensure NVM and Node.js are available in the user's environment
+RUN echo 'export NVM_DIR="$HOME/.nvm"' >> $HOME/.bashrc \
+    && echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $HOME/.bashrc
 
 CMD ["--tail-log"]
