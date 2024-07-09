@@ -14,18 +14,6 @@ RUN apt-get update \
     && echo 'kasm-user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
     && rm -rf /var/lib/apt/list/*
 
-    # Rootless Dind
-COPY ./src/ubuntu/install/dind_rootless/install_dind_rootless.sh $INST_SCRIPTS/dind_rootless/
-RUN bash $INST_SCRIPTS/dind_rootless/install_dind_rootless.sh
-RUN rm -rf $INST_SCRIPTS/dind_rootless
-COPY ./src/ubuntu/install/dind_rootless/custom_startup.sh $STARTUPDIR/custom_startup.sh
-RUN chmod +x $STARTUPDIR/custom_startup.sh && chmod 755 $STARTUPDIR/custom_startup.sh
-COPY ./src/ubuntu/install/dind_rootless/modprobe /usr/local/bin/modprobe
-RUN chmod +x /usr/local/bin/modprobe
-ENV XDG_RUNTIME_DIR=/docker \
-    DOCKER_HOST=unix:///docker/docker.sock
-RUN mkdir -p $XDG_RUNTIME_DIR && chown 1000:0 $XDG_RUNTIME_DIR    
-
 ### Environment config
 ENV DEBIAN_FRONTEND=noninteractive \
     SKIP_CLEAN=true \
@@ -35,9 +23,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
     INST_SCRIPTS="/ubuntu/install/tools/install_tools_deluxe.sh \
                   /ubuntu/install/misc/install_tools.sh \
                   /ubuntu/install/chrome/install_chrome.sh \
-                  /ubuntu/install/chromium/install_chromium.sh \
                   /ubuntu/install/firefox/install_firefox.sh \
-                  /ubuntu/install/vs_code/install_vs_code.sh \
+                  /ubuntu/install/zoom/install_zoom.sh \
+                  /ubuntu/install/telegram/install_telegram.sh \
+                  /ubuntu/install/wine/install_wine.sh \
+                  /ubuntu/install/libre_office/install_libre_office.sh \
                   /ubuntu/install/cleanup/cleanup.sh"
                   
 # Copy install scripts

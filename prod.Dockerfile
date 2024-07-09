@@ -1,19 +1,18 @@
-ARG BASE_TAG="1.15.0"
+ARG BASE_TAG="develop"
 ARG BASE_IMAGE="core-ubuntu-jammy"
 FROM kasmweb/$BASE_IMAGE:$BASE_TAG
-
 USER root
 
 ENV HOME /home/kasm-default-profile
 ENV STARTUPDIR /dockerstartup
+ENV INST_SCRIPTS $STARTUPDIR/install
 WORKDIR $HOME
 
-#Install SUDO for kasm-user
-# RUN apt-get update \
-#     && apt-get install -y sudo \
-#     && echo 'kasm-user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
-#     && rm -rf /var/lib/apt/list/*
 
+RUN apt-get update \
+    && apt-get install -y sudo \
+    && echo 'kasm-user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
+    && rm -rf /var/lib/apt/list/*
 
 # Rootless Dind
 COPY ./src/ubuntu/install/dind_rootless/install_dind_rootless.sh $INST_SCRIPTS/dind_rootless/
@@ -25,21 +24,21 @@ COPY ./src/ubuntu/install/dind_rootless/modprobe /usr/local/bin/modprobe
 RUN chmod +x /usr/local/bin/modprobe
 ENV XDG_RUNTIME_DIR=/docker \
     DOCKER_HOST=unix:///docker/docker.sock
-RUN mkdir -p $XDG_RUNTIME_DIR && chown 1000:0 $XDG_RUNTIME_DIR    
+RUN mkdir -p $XDG_RUNTIME_DIR && chown 1000:0 $XDG_RUNTIME_DIR
 
-### Environment config
+### Envrionment config
 ENV DEBIAN_FRONTEND=noninteractive \
     SKIP_CLEAN=true \
     KASM_RX_HOME=$STARTUPDIR/kasmrx \
     DONT_PROMPT_WSL_INSTALL="No_Prompt_please" \
     INST_DIR=$STARTUPDIR/install \
-    INST_SCRIPTS="/ubuntu/install/tools/install_tools_deluxe.sh \
+    INST_SCRIPTS="/ubuntu/install/tools/install_dev_tools_deluxe.sh \
                   /ubuntu/install/misc/install_tools.sh \
                   /ubuntu/install/chrome/install_chrome.sh \
-                  /ubuntu/install/chromium/install_chromium.sh \
                   /ubuntu/install/vs_code/install_vs_code.sh \
+                  /ubuntu/install/only_office/install_only_office.sh \
                   /ubuntu/install/cleanup/cleanup.sh"
-                  
+
 # Copy install scripts
 COPY ./src/ $INST_DIR
 
